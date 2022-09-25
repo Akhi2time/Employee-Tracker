@@ -1,6 +1,6 @@
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const inquirer = require('inquirer');
-const chalk = require('chalk');
+
 const consoleTable = require('console.table');
 const util = require("util");
 
@@ -9,7 +9,7 @@ const connection = mysql.createConnection({
     port: 3306,
     user: 'root',
     password: '',
-    database: 'employeeDB'
+    database: 'employee_DB'
   });
 
   connection.connect(err => {
@@ -18,7 +18,7 @@ const connection = mysql.createConnection({
     start();
   });
 
-  const queryAsync = util.promisify(connection.query).bind(connection);
+ const queryAsync = util.promisify(connection.query).bind(connection);
 
   async function start() {
 	const answer = await inquirer.prompt({
@@ -27,7 +27,7 @@ const connection = mysql.createConnection({
 		message: 'What would you like to do?',
 		choices: [
 			'View All Departments',
-			'View All Roles',
+			'View All ',
 			'View All Employees',
 			'Add A Department',
 			'Add A Role',
@@ -45,8 +45,8 @@ const connection = mysql.createConnection({
 		case 'View All Departments':
 			viewDepartments();
 			break;
-		case 'View All Roles':
-			viewRoles();
+		case 'View All ':
+			view();
 			break;
 		case 'View All Employees':
 			viewEmployees();
@@ -96,19 +96,19 @@ async function viewDepartments() {
     start();
 };
 
-async function viewRoles() {
-	const res = await queryAsync('SELECT role.id, role.title, role.salary, department.name FROM role INNER JOIN department ON role.department_id = department.id');
-	const allRoles = [];
+async function view() {
+	const res = await queryAsync('SELECT role.id, role.title, role.salary, department.name FROM roles role INNER JOIN department ON role.department_id = department.id');
+	const all = [];
     console.log(' ');
     for (let i of res) {
-	    allRoles.push({ ID: i.id, TITLE: i.title, SALARY: i.salary, DEPARTMENT: i.name });
+	    all.push({ ID: i.id, TITLE: i.title, SALARY: i.salary, DEPARTMENT: i.name });
     }
-    console.table(allRoles);
+    console.table(all);
     start();
 };
 
 async function viewEmployees() {	
-	const res = await queryAsync('SELECT e.id, CONCAT(e.firstName, " ", e.lastName) AS employee_Name, role.title, role.salary, CONCAT(m.firstName, " ", m.lastName) AS managerName FROM employee e LEFT JOIN employee m ON m.id = e.managerId INNER JOIN role ON e.roleId = role.id');
+	const res = await queryAsync('SELECT e.id, CONCAT(e.first_name, " ", e.last_name) AS employee_Name, role.title, role.salary, CONCAT(m.first_name, " ", m.last_name) AS managerName FROM employee e LEFT JOIN employee m ON m.id = e.manager_id INNER JOIN roles role ON e.role_id = role.id');
 	const allEmployees = [];
 	console.log(' ');
     for (let i of res) {   
@@ -163,6 +163,7 @@ async function addRole() {
 		if (i.name === answer.department) {
 			departmentId = i.id;
   		}
-		  await queryAsync('INSERT INTO role SET ?', { title: answer.role, salary: answer.salary, departmentId: departmentId });
+		  await queryAsync('INSERT INTO roles SET ?', { title: answer.role, salary: answer.salary, departmentId: departmentId });
 		  viewEmployees ();
 	};
+}
